@@ -1,35 +1,38 @@
 # User Info API
 
-A production-ready FastAPI application with clean architecture and proper separation of concerns.
+A production-ready FastAPI application following Modular Monolith architecture.
 
 ## Project Structure
 
 ```
 app/
-├── api/
-│   └── v1/
-│       ├── endpoints/
-│       │   └── users.py
-│       └── api.py
-├── core/
-│   └── config.py
-├── models/
-│   └── user.py
-├── schemas/
-├── services/
-├── utils/
-└── main.py
+├── modules/
+│   ├── common/
+│   │   ├── config/
+│   │   │   ├── settings.py
+│   │   │   └── database.py
+│   │   └── utils/
+│   │       └── security.py
+│   └── users/
+│       ├── models/
+│       │   └── user.py
+│       ├── schemas/
+│       │   └── user.py
+│       ├── services/
+│       │   └── user_service.py
+│       └── api/
+│           └── endpoints.py
 ```
 
 ## Features
 
-- Clean Architecture
-- API Versioning
+- Modular Monolith Architecture
+- Clean Code Structure
 - CORS Middleware
 - Environment Configuration
 - Type Hints and Validation
 - OpenAPI Documentation
-- Mock Database (Ready for real database integration)
+- SQLite Database (Ready for production database)
 
 ## Local Development
 
@@ -46,7 +49,7 @@ pip install -r requirements.txt
 
 3. Run the application:
 ```bash
-uvicorn app.main:app --reload
+uvicorn main:app --reload
 ```
 
 The API will be available at http://localhost:8000
@@ -63,8 +66,6 @@ Once the application is running, you can access:
 - GET `/api/v1/users/`: Get all users
 - GET `/api/v1/users/{user_id}`: Get user by ID
 - POST `/api/v1/users/`: Create new user
-- PUT `/api/v1/users/{user_id}`: Update user
-- DELETE `/api/v1/users/{user_id}`: Delete user
 
 ## Deployment to Railway
 
@@ -77,6 +78,6 @@ Once the application is running, you can access:
 
 Create a `.env` file in the root directory with the following variables:
 ```
-SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///./sql_app.db
 BACKEND_CORS_ORIGINS=["http://localhost:3000"]
 ``` 
