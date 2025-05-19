@@ -1,83 +1,36 @@
-# User Info API
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-A production-ready FastAPI application following Modular Monolith architecture.
+## Getting Started
 
-## Project Structure
+First, run the development server:
 
-```
-app/
-├── modules/
-│   ├── common/
-│   │   ├── config/
-│   │   │   ├── settings.py
-│   │   │   └── database.py
-│   │   └── utils/
-│   │       └── security.py
-│   └── users/
-│       ├── models/
-│       │   └── user.py
-│       ├── schemas/
-│       │   └── user.py
-│       ├── services/
-│       │   └── user_service.py
-│       └── api/
-│           └── endpoints.py
-```
-
-## Features
-
-- Modular Monolith Architecture
-- Clean Code Structure
-- CORS Middleware
-- Environment Configuration
-- Type Hints and Validation
-- OpenAPI Documentation
-- SQLite Database (Ready for production database)
-
-## Local Development
-
-1. Create a virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-3. Run the application:
-```bash
-uvicorn main:app --reload
-```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-The API will be available at http://localhost:8000
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## API Documentation
+## Learn More
 
-Once the application is running, you can access:
-- Swagger UI documentation: http://localhost:8000/docs
-- ReDoc documentation: http://localhost:8000/redoc
+To learn more about Next.js, take a look at the following resources:
 
-## API Endpoints
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### Users
-- GET `/api/v1/users/`: Get all users
-- GET `/api/v1/users/{user_id}`: Get user by ID
-- POST `/api/v1/users/`: Create new user
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deployment to Railway
+## Deploy on Vercel
 
-1. Create a new project on Railway
-2. Connect your GitHub repository
-3. Railway will automatically detect the Python application and deploy it
-4. The application will be available at the URL provided by Railway
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-```
-DATABASE_URL=sqlite:///./sql_app.db
-BACKEND_CORS_ORIGINS=["http://localhost:3000"]
-``` 
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
