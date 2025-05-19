@@ -19,6 +19,18 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
+# Add HTTPS redirect middleware
+@app.middleware("http")
+async def https_redirect_middleware(request: Request, call_next):
+    # Check if the request is coming from Railway's proxy
+    forwarded_proto = request.headers.get("x-forwarded-proto", "")
+    if forwarded_proto == "https":
+        return await call_next(request)
+    
+    # If not HTTPS, redirect
+    url = str(request.url).replace("http://", "https://", 1)
+    return RedirectResponse(url=url, status_code=301)
+
 # Set CORS middleware
 app.add_middleware(
     CORSMiddleware,
