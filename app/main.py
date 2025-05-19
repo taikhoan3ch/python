@@ -19,14 +19,6 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Add HTTPS redirect middleware
-@app.middleware("http")
-async def https_redirect_middleware(request: Request, call_next):
-    if not request.url.scheme == "https":
-        url = str(request.url).replace("http://", "https://", 1)
-        return RedirectResponse(url=url, status_code=301)
-    return await call_next(request)
-
 # Set CORS middleware
 app.add_middleware(
     CORSMiddleware,
