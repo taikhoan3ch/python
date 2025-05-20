@@ -27,10 +27,23 @@ def create_product(
         if not user_id:
             raise HTTPException(status_code=401, detail="User not authenticated")
             
-        return ProductService.create_product(db=db, product=product, user_id=user_id)
+        created_product = ProductService.create_product(db=db, product=product, user_id=user_id)
+        return StandardResponse.success(
+            data=created_product,
+            message="Product created successfully"
+        )
+    except ValueError as e:
+        logger.error(f"Validation error creating product: {str(e)}")
+        return JSONResponse(
+            status_code=400,
+            content=StandardResponse.error(str(e))
+        )
     except Exception as e:
         logger.error(f"Error creating product: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(
+            status_code=500,
+            content=StandardResponse.error(f"Error creating product: {str(e)}")
+        )
 
 @router.get("/", response_model=List[Product])
 @check_permissions(["read_product"])

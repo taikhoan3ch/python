@@ -3,18 +3,42 @@ from app.modules.products.models.product import Product
 from app.modules.products.schemas.product import ProductCreate, ProductUpdate
 from typing import List, Optional
 from app.modules.common.config.database import Base, engine
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ProductService:
     @staticmethod
     def create_product(db: Session, product: ProductCreate, user_id: int) -> Product:
-        db_product = Product(
-            **product.model_dump(),
-            created_by=user_id
-        )
-        db.add(db_product)
-        db.commit()
-        db.refresh(db_product)
-        return db_product
+        try:
+            # Validate user exists
+            from app.modules.users.models.user import User
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise ValueError(f"User with ID {user_id} does not exist")
+
+            # Create product
+            db_product = Product(
+                **product.model_dump(),
+                created_by=user_id
+            )
+            db.add(db_product)
+            db.commit()
+            db.refresh(db_product)
+            return db_product
+        except IntegrityError as e:
+            db.rollback()
+            logger.error(f"Database integrity error while creating product: {str(e)}")
+            raise ValueError("A product with this name already exists")
+        except SQLAlchemyError as e:
+            db.rollback()
+            logger.error(f"Database error while creating product: {str(e)}")
+            raise Exception("Database error occurred while creating product")
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Unexpected error while creating product: {str(e)}")
+            raise Exception(f"Failed to create product: {str(e)}")
 
     @staticmethod
     def get_product(db: Session, product_id: int) -> Optional[Product]:
