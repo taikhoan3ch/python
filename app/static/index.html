@@ -15,6 +15,45 @@
         .hidden {
             display: none;
         }
+        .message-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .message {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -42,6 +81,8 @@
 
     <!-- Main Content (Hidden until logged in) -->
     <div id="mainContent" class="container hidden">
+        <!-- Message Container -->
+        <div id="messageContainer" class="message-container"></div>
         <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">Product Management</a>
@@ -132,6 +173,23 @@
         const API_URL = '/api/v1';
         let currentUser = null;
         let userPermissions = [];
+
+        // Function to show messages
+        function showMessage(message, type = 'success') {
+            const messageContainer = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+            messageDiv.textContent = message;
+            
+            messageContainer.appendChild(messageDiv);
+            
+            // Remove message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                messageDiv.style.transition = 'opacity 0.3s ease-out';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 5000);
+        }
 
         // Check if user is logged in
         function checkAuth() {
@@ -224,10 +282,10 @@
                     userPermissions = result.data.user.permissions || [];
                     showMainContent();
                 } else {
-                    alert(`Error: ${result.message}`);
+                    showMessage(result.message, 'error');
                 }
             } catch (error) {
-                alert('Error logging in: ' + error.message);
+                showMessage('Error logging in: ' + error.message, 'error');
             }
         });
 
@@ -240,12 +298,12 @@
             const stock = parseInt(document.getElementById('productStock').value);
             
             if (isNaN(price) || price < 0) {
-                alert('Please enter a valid positive price');
+                showMessage('Please enter a valid positive price', 'error');
                 return;
             }
             
             if (isNaN(stock) || stock < 0) {
-                alert('Please enter a valid positive stock quantity');
+                showMessage('Please enter a valid positive stock quantity', 'error');
                 return;
             }
             
@@ -258,7 +316,7 @@
 
             // Validate required fields
             if (!productData.name) {
-                alert('Product name is required');
+                showMessage('Product name is required', 'error');
                 return;
             }
 
@@ -275,15 +333,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(result.message || 'Product added successfully!');
+                    showMessage(result.message || 'Product added successfully!');
                     document.getElementById('addProductForm').reset();
                     loadProducts();
                 } else {
-                    alert(`Error: ${result.message || 'Failed to add product'}`);
+                    showMessage(result.message || 'Failed to add product', 'error');
                 }
             } catch (error) {
                 console.error('Error adding product:', error);
-                alert('Error adding product: ' + (error.message || 'Unknown error occurred'));
+                showMessage('Error adding product: ' + (error.message || 'Unknown error occurred'), 'error');
             }
         });
 
@@ -369,13 +427,13 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(result.message || 'Product deleted successfully!');
+                    showMessage(result.message || 'Product deleted successfully!');
                     loadProducts();
                 } else {
-                    alert(`Error: ${result.message}`);
+                    showMessage(result.message, 'error');
                 }
             } catch (error) {
-                alert('Error deleting product: ' + error.message);
+                showMessage('Error deleting product: ' + error.message, 'error');
             }
         }
 
@@ -389,9 +447,9 @@
                     }
                 });
                 const result = await response.json();
-                alert(result.message || 'Role tables created successfully!');
+                showMessage(result.message || 'Role tables created successfully!');
             } catch (error) {
-                alert('Error creating role tables: ' + error.message);
+                showMessage('Error creating role tables: ' + error.message, 'error');
             }
         }
 
@@ -404,9 +462,9 @@
                     }
                 });
                 const result = await response.json();
-                alert(result.message || 'User tables created successfully!');
+                showMessage(result.message || 'User tables created successfully!');
             } catch (error) {
-                alert('Error creating user tables: ' + error.message);
+                showMessage('Error creating user tables: ' + error.message, 'error');
             }
         }
 
@@ -419,9 +477,9 @@
                     }
                 });
                 const result = await response.json();
-                alert(result.message || 'Product tables created successfully!');
+                showMessage(result.message || 'Product tables created successfully!');
             } catch (error) {
-                alert('Error creating product tables: ' + error.message);
+                showMessage('Error creating product tables: ' + error.message, 'error');
             }
         }
 
@@ -441,12 +499,12 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Tables created successfully');
+                    showMessage('Tables created successfully');
                 } else {
-                    alert('Failed to create tables: ' + data.message);
+                    showMessage('Failed to create tables: ' + data.message, 'error');
                 }
             } catch (error) {
-                alert('Error creating tables: ' + error.message);
+                showMessage('Error creating tables: ' + error.message, 'error');
             }
         }
 
@@ -465,12 +523,12 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('Tables dropped successfully');
+                    showMessage('Tables dropped successfully');
                 } else {
-                    alert('Failed to drop tables: ' + data.message);
+                    showMessage('Failed to drop tables: ' + data.message, 'error');
                 }
             } catch (error) {
-                alert('Error dropping tables: ' + error.message);
+                showMessage('Error dropping tables: ' + error.message, 'error');
             }
         }
 
