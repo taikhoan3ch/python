@@ -7,6 +7,7 @@ from typing import Optional, Any, Dict
 import logging
 from app.modules.common.config.settings import settings
 from app.modules.users.api.endpoints import router as users_router
+from app.modules.common.utils.response import StandardResponse
 import os
 
 # Configure logging
@@ -15,23 +16,6 @@ logging.basicConfig(
     format=settings.LOG_FORMAT
 )
 logger = logging.getLogger(__name__)
-
-class StandardResponse:
-    @staticmethod
-    def success(data: Optional[Any] = None, message: Optional[str] = None) -> Dict:
-        return {
-            "success": True,
-            "message": message,
-            "data": data
-        }
-    
-    @staticmethod
-    def error(message: str, data: Optional[Any] = None) -> Dict:
-        return {
-            "success": False,
-            "message": message,
-            "data": data
-        }
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

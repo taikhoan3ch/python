@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from app.modules.common.config.database import get_db
 from app.modules.users.schemas.user import User, UserCreate
 from app.modules.users.services import user_service
-from app.main import StandardResponse
+from app.modules.common.utils.response import StandardResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
