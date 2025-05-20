@@ -72,6 +72,32 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
             content=StandardResponse.error("Error retrieving users")
         )
 
+@router.get("/me")
+@check_permissions([])  # No specific permissions required, just valid token
+def get_current_user(request: Request, db: Session = Depends(get_db)):
+    """
+    Get current user information
+    """
+    try:
+        user = request.state.user
+        permissions = [p.name for p in user.role.permissions] if user.role else []
+        
+        return StandardResponse.success(
+            data={
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "permissions": permissions
+            },
+            message="User information retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error in get_current_user endpoint: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content=StandardResponse.error("Internal server error")
+        )
+
 @router.get("/{user_id}")
 @check_permissions(["read_user"])
 def read_user(user_id: int, db: Session = Depends(get_db)):
@@ -184,32 +210,6 @@ def login(login_data: LoginData, db: Session = Depends(get_db)):
         return JSONResponse(
             status_code=500,
             content=StandardResponse.error("Error during login")
-        )
-
-@router.get("/me")
-@check_permissions([])  # No specific permissions required, just valid token
-def get_current_user(request: Request, db: Session = Depends(get_db)):
-    """
-    Get current user information
-    """
-    try:
-        user = request.state.user
-        permissions = [p.name for p in user.role.permissions] if user.role else []
-        
-        return StandardResponse.success(
-            data={
-                "id": user.id,
-                "email": user.email,
-                "username": user.username,
-                "permissions": permissions
-            },
-            message="User information retrieved successfully"
-        )
-    except Exception as e:
-        logger.error(f"Error in get_current_user endpoint: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error("Internal server error")
         )
 
 @router.post("/tables/create")
