@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 import logging
 from app.modules.common.config.settings import settings
 from app.modules.users.api.endpoints import router as users_router
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -18,6 +20,9 @@ app = FastAPI(
     version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Add HTTPS redirect middleware
 @app.middleware("http")
@@ -45,6 +50,10 @@ app.include_router(users_router, prefix=f"{settings.API_V1_STR}/users", tags=["u
 
 @app.get("/")
 async def root():
+    return FileResponse("app/static/index.html")
+
+@app.get("/api")
+async def api_info():
     return {
         "message": "Welcome to User Info API",
         "version": settings.VERSION,
