@@ -4,6 +4,7 @@ from app.modules.users.schemas.user import UserCreate
 from app.modules.common.utils.security import get_password_hash
 import logging
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from app.modules.common.config.database import Base, engine
 
 logger = logging.getLogger(__name__)
 
@@ -56,4 +57,8 @@ def create_user(db: Session, user: UserCreate):
             
     except Exception as e:
         logger.error(f"Error creating user: {str(e)}")
-        raise Exception(f"Failed to create user: {str(e)}") 
+        raise Exception(f"Failed to create user: {str(e)}")
+
+def create_tables():
+    """Create user table if it doesn't exist"""
+    Base.metadata.create_all(bind=engine, tables=[User.__table__]) 

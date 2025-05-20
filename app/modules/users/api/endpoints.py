@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.modules.common.config.database import get_db
 from app.modules.users.schemas.user import User, UserCreate, UserUpdate
 from app.modules.users.services import user_service
+from app.modules.users.services.role_service import RoleService
 from app.modules.common.utils.response import StandardResponse
 from app.modules.common.middleware.auth_middleware import check_permissions
 from app.modules.common.utils.jwt import create_access_token
@@ -208,5 +209,75 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
         logger.error(f"Error in get_current_user endpoint: {str(e)}")
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error("Error retrieving user information")
+            content=StandardResponse.error("Internal server error")
+        )
+
+@router.post("/tables/create")
+@check_permissions(["manage_tables"])
+def create_tables(request: Request, db: Session = Depends(get_db)):
+    """
+    Create database tables. Requires 'manage_tables' permission (admin only).
+    """
+    try:
+        from app.modules.common.config.database import Base, engine
+        Base.metadata.create_all(bind=engine)
+        return StandardResponse.success(
+            message="Database tables created successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error creating tables: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content=StandardResponse.error("Failed to create database tables")
+        )
+
+@router.post("/tables/drop")
+@check_permissions(["manage_tables"])
+def drop_tables(request: Request, db: Session = Depends(get_db)):
+    """
+    Drop all database tables. Requires 'manage_tables' permission (admin only).
+    """
+    try:
+        from app.modules.common.config.database import Base, engine
+        Base.metadata.drop_all(bind=engine)
+        return StandardResponse.success(
+            message="Database tables dropped successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error dropping tables: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content=StandardResponse.error("Failed to drop database tables")
+        )
+
+@router.post("/create-role-tables")
+@check_permissions(["manage_roles"])
+def create_role_tables(db: Session = Depends(get_db)):
+    """
+    Create role and permission tables. Requires 'manage_roles' permission.
+    """
+    try:
+        RoleService.create_tables()
+        return StandardResponse.success(message="Role tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating role tables: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content=StandardResponse.error(f"Error creating role tables: {str(e)}")
+        )
+
+@router.post("/create-user-tables")
+@check_permissions(["manage_roles"])
+def create_user_tables(db: Session = Depends(get_db)):
+    """
+    Create user table. Requires 'manage_roles' permission.
+    """
+    try:
+        user_service.create_tables()
+        return StandardResponse.success(message="User tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating user tables: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content=StandardResponse.error(f"Error creating user tables: {str(e)}")
         ) 

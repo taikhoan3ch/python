@@ -52,6 +52,26 @@
             </div>
         </nav>
 
+        <!-- Database Management Section (Only visible to admin) -->
+        <div id="dbManagementSection" class="card mb-4 hidden">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Database Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100 mb-2" onclick="createRoleTables()">Create Role Tables</button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100 mb-2" onclick="createUserTables()">Create User Tables</button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100 mb-2" onclick="createProductTables()">Create Product Tables</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Add Product Form (Only visible to users with create_product permission) -->
         <div id="addProductSection" class="card mb-4 hidden">
             <div class="card-header">
@@ -90,6 +110,22 @@
                 <div id="productsList"></div>
             </div>
         </div>
+
+        <!-- Database Management Section (Admin Only) -->
+        <div id="dbManagementSection" class="card mt-4 hidden">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Database Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> These operations are for administrators only and can affect the entire database.
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" onclick="createTables()">Create Tables</button>
+                    <button class="btn btn-danger" onclick="dropTables()">Drop Tables</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -126,10 +162,19 @@
         // Show/hide sections based on permissions
         function updateUIBasedOnPermissions() {
             const addProductSection = document.getElementById('addProductSection');
+            const dbManagementSection = document.getElementById('dbManagementSection');
+            
             if (userPermissions.includes('create_product')) {
                 addProductSection.classList.remove('hidden');
             } else {
                 addProductSection.classList.add('hidden');
+            }
+
+            // Show database management section only for admin
+            if (userPermissions.includes('manage_tables')) {
+                dbManagementSection.classList.remove('hidden');
+            } else {
+                dbManagementSection.classList.add('hidden');
             }
         }
 
@@ -314,6 +359,101 @@
                 }
             } catch (error) {
                 alert('Error deleting product: ' + error.message);
+            }
+        }
+
+        // Database management functions
+        async function createRoleTables() {
+            try {
+                const response = await fetch(`${API_URL}/users/create-role-tables`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const result = await response.json();
+                alert(result.message || 'Role tables created successfully!');
+            } catch (error) {
+                alert('Error creating role tables: ' + error.message);
+            }
+        }
+
+        async function createUserTables() {
+            try {
+                const response = await fetch(`${API_URL}/users/create-user-tables`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const result = await response.json();
+                alert(result.message || 'User tables created successfully!');
+            } catch (error) {
+                alert('Error creating user tables: ' + error.message);
+            }
+        }
+
+        async function createProductTables() {
+            try {
+                const response = await fetch(`${API_URL}/products/create-tables`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const result = await response.json();
+                alert(result.message || 'Product tables created successfully!');
+            } catch (error) {
+                alert('Error creating product tables: ' + error.message);
+            }
+        }
+
+        // Database management functions
+        async function createTables() {
+            if (!confirm('Are you sure you want to create all database tables?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/users/tables/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Tables created successfully');
+                } else {
+                    alert('Failed to create tables: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error creating tables: ' + error.message);
+            }
+        }
+
+        async function dropTables() {
+            if (!confirm('WARNING: This will delete all data in the database. Are you absolutely sure?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/users/tables/drop`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Tables dropped successfully');
+                } else {
+                    alert('Failed to drop tables: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error dropping tables: ' + error.message);
             }
         }
 

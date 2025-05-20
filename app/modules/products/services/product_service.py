@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.modules.products.models.product import Product
 from app.modules.products.schemas.product import ProductCreate, ProductUpdate
 from typing import List, Optional
+from app.modules.common.config.database import Base, engine
 
 class ProductService:
     @staticmethod
@@ -66,4 +67,9 @@ class ProductService:
             
         db.delete(db_product)
         db.commit()
-        return True 
+        return True
+
+    @staticmethod
+    def create_tables():
+        """Create product table if it doesn't exist"""
+        Base.metadata.create_all(bind=engine, tables=[Product.__table__]) 

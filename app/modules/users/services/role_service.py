@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.modules.users.models.role import Role, Permission
 from typing import List, Optional
+from app.modules.common.config.database import Base, engine
 
 class RoleService:
     @staticmethod
@@ -59,7 +60,9 @@ class RoleService:
             "read_user": "Can view users",
             "update_user": "Can update users",
             "delete_user": "Can delete users",
-            "manage_roles": "Can manage user roles and permissions"
+            "manage_roles": "Can manage user roles and permissions",
+            # Add table management permission
+            "manage_tables": "Can manage database tables"
         }
 
         created_permissions = {}
@@ -96,4 +99,9 @@ class RoleService:
                         RoleService.add_permission_to_role(db, role, created_permissions[perm_name])
             elif name == "user":
                 if created_permissions["read_product"] not in role.permissions:
-                    RoleService.add_permission_to_role(db, role, created_permissions["read_product"]) 
+                    RoleService.add_permission_to_role(db, role, created_permissions["read_product"])
+
+    @staticmethod
+    def create_tables():
+        """Create role and permission tables if they don't exist"""
+        Base.metadata.create_all(bind=engine, tables=[Role.__table__, Permission.__table__]) 
