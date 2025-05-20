@@ -40,4 +40,14 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = user_service.get_user(db, user_id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return db_user 
+    return db_user
+
+@router.post("/create-table")
+def create_table(db: Session = Depends(get_db)):
+    try:
+        result = user_service.create_users_table(db=db)
+        return result
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error in create_table endpoint: {error_message}")
+        raise HTTPException(status_code=500, detail=f"Error creating users table: {error_message}") 
