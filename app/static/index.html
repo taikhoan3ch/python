@@ -235,12 +235,32 @@
         document.getElementById('addProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // Validate inputs
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            
+            if (isNaN(price) || price < 0) {
+                alert('Please enter a valid positive price');
+                return;
+            }
+            
+            if (isNaN(stock) || stock < 0) {
+                alert('Please enter a valid positive stock quantity');
+                return;
+            }
+            
             const productData = {
-                name: document.getElementById('productName').value,
-                description: document.getElementById('productDescription').value,
-                price: parseFloat(document.getElementById('productPrice').value),
-                stock: parseInt(document.getElementById('productStock').value)
+                name: document.getElementById('productName').value.trim(),
+                description: document.getElementById('productDescription').value.trim(),
+                price: price,
+                stock: stock
             };
+
+            // Validate required fields
+            if (!productData.name) {
+                alert('Product name is required');
+                return;
+            }
 
             try {
                 const response = await fetch(`${API_URL}/products/`, {
@@ -259,10 +279,11 @@
                     document.getElementById('addProductForm').reset();
                     loadProducts();
                 } else {
-                    alert(`Error: ${result.message}`);
+                    alert(`Error: ${result.message || 'Failed to add product'}`);
                 }
             } catch (error) {
-                alert('Error adding product: ' + error.message);
+                console.error('Error adding product:', error);
+                alert('Error adding product: ' + (error.message || 'Unknown error occurred'));
             }
         });
 
