@@ -46,7 +46,7 @@ async def https_redirect_middleware(request: Request, call_next):
         logger.error(f"Middleware error: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error("Internal server error")
+            content=StandardResponse.error("Internal server error1")
         )
 
 # Set CORS middleware
@@ -104,7 +104,7 @@ async def api_info():
         logger.error(f"Error in api_info: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error("Internal server error")
+            content=StandardResponse.error("Internal server error2")
         )
 
 @app.exception_handler(RequestValidationError)
@@ -120,5 +120,5 @@ async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unexpected error: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content=StandardResponse.error("Internal server error")
+        content=StandardResponse.error("Internal server error3")
     ) 
