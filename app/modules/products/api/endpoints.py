@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/", response_model=Product)
-@check_permissions(["create_product"])
+# @check_permissions(["create_product"])
 def create_product(
     request: Request,
     product: ProductCreate,
