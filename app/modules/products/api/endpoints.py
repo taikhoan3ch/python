@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Union
 from app.modules.common.config.database import get_db
 from app.modules.common.middleware.auth_middleware import check_permissions
 from app.modules.products.schemas.product import Product, ProductCreate, ProductUpdate
@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.post("/", response_model=Product)
+@router.post("/", response_model=Union[Product, StandardResponse])
 @check_permissions(["create_product"])
 def create_product(
     request: Request,
@@ -28,24 +28,15 @@ def create_product(
             raise HTTPException(status_code=401, detail="User not authenticated")
             
         created_product = ProductService.create_product(db=db, product=product, user_id=user_id)
-        return StandardResponse.success(
-            data=created_product,
-            message="Product created successfully"
-        )
+        return created_product
     except ValueError as e:
         logger.error(f"Validation error creating product: {str(e)}")
-        return JSONResponse(
-            status_code=400,
-            content=StandardResponse.error(str(e))
-        )
+        return StandardResponse.error(str(e))
     except Exception as e:
         logger.error(f"Error creating product: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error creating product: {str(e)}")
-        )
+        return StandardResponse.error(f"Error creating product: {str(e)}")
 
-@router.get("/", response_model=List[Product])
+@router.get("/", response_model=Union[List[Product], StandardResponse])
 @check_permissions(["read_product"])
 def get_products(
     request: Request,
@@ -67,24 +58,15 @@ def get_products(
             raise HTTPException(status_code=401, detail="User not authenticated")
             
         products = ProductService.get_products(db=db, skip=skip, limit=limit, user_id=user_id)
-        return StandardResponse.success(
-            data=products,
-            message="Products retrieved successfully"
-        )
+        return products
     except ValueError as e:
         logger.error(f"Validation error getting products: {str(e)}")
-        return JSONResponse(
-            status_code=400,
-            content=StandardResponse.error(str(e))
-        )
+        return StandardResponse.error(str(e))
     except Exception as e:
         logger.error(f"Error getting products: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error getting products: {str(e)}")
-        )
+        return StandardResponse.error(f"Error getting products: {str(e)}")
 
-@router.put("/{product_id}", response_model=Product)
+@router.put("/{product_id}", response_model=Union[Product, StandardResponse])
 @check_permissions(["update_product"])
 def update_product(
     request: Request,
@@ -106,24 +88,15 @@ def update_product(
             product=product,
             user_id=user_id
         )
-        return StandardResponse.success(
-            data=updated_product,
-            message="Product updated successfully"
-        )
+        return updated_product
     except ValueError as e:
         logger.error(f"Validation error updating product: {str(e)}")
-        return JSONResponse(
-            status_code=400,
-            content=StandardResponse.error(str(e))
-        )
+        return StandardResponse.error(str(e))
     except Exception as e:
         logger.error(f"Error updating product: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error updating product: {str(e)}")
-        )
+        return StandardResponse.error(f"Error updating product: {str(e)}")
 
-@router.delete("/{product_id}")
+@router.delete("/{product_id}", response_model=StandardResponse)
 @check_permissions(["delete_product"])
 def delete_product(
     request: Request,
@@ -139,23 +112,15 @@ def delete_product(
             raise HTTPException(status_code=401, detail="User not authenticated")
             
         success = ProductService.delete_product(db=db, product_id=product_id, user_id=user_id)
-        return StandardResponse.success(
-            message="Product deleted successfully"
-        )
+        return StandardResponse.success(message="Product deleted successfully")
     except ValueError as e:
         logger.error(f"Validation error deleting product: {str(e)}")
-        return JSONResponse(
-            status_code=400,
-            content=StandardResponse.error(str(e))
-        )
+        return StandardResponse.error(str(e))
     except Exception as e:
         logger.error(f"Error deleting product: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error deleting product: {str(e)}")
-        )
+        return StandardResponse.error(f"Error deleting product: {str(e)}")
 
-@router.post("/create-tables")
+@router.post("/create-tables", response_model=StandardResponse)
 @check_permissions(["manage_database"])
 def create_product_tables(db: Session = Depends(get_db)):
     """
@@ -166,7 +131,4 @@ def create_product_tables(db: Session = Depends(get_db)):
         return StandardResponse.success(message="Product tables created successfully")
     except Exception as e:
         logger.error(f"Error creating product tables: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error creating product tables: {str(e)}")
-        ) 
+        return StandardResponse.error(f"Error creating product tables: {str(e)}") 
