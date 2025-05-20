@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.post("/", response_model=Dict[str, Any])
+@router.post("/", response_model=Product)
 @check_permissions(["create_product"])
 def create_product(
     request: Request,
@@ -32,7 +32,7 @@ def create_product(
             data=created_product,
             message="Product created successfully"
         )
-
+   
     except ValueError as e:
         logger.error(f"Validation error creating product: {str(e)}")
         return StandardResponse.error(message=str(e))
@@ -40,7 +40,6 @@ def create_product(
     except Exception as e:
         logger.exception("Unhandled error while creating product")
         return StandardResponse.error(message="An unexpected error occurred")
-
 
 @router.get("/", response_model=List[Product])
 @check_permissions(["read_product"])
