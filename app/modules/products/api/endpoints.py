@@ -28,18 +28,15 @@ def create_product(
             raise HTTPException(status_code=401, detail="User not authenticated")
             
         created_product = ProductService.create_product(db=db, product=product, user_id=user_id)
-        return StandardResponse.success(
-            data=created_product,
-            message="Product created successfully"
-        )
+        return created_product
    
     except ValueError as e:
         logger.error(f"Validation error creating product: {str(e)}")
-        return StandardResponse.error(message=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
     except Exception as e:
         logger.exception("Unhandled error while creating product")
-        return StandardResponse.error(message="An unexpected error occurred")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 @router.get("/", response_model=List[Product])
 @check_permissions(["read_product"])
