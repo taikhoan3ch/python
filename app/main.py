@@ -10,7 +10,7 @@ from app.modules.users.api.endpoints import router as users_router
 from app.modules.common.utils.response import StandardResponse
 import os
 from app.modules.common.config.database import engine, Base
-from app.modules.products.api import product_api
+from app.modules.products.api.endpoints import router as products_router
 from app.modules.users.services.role_service import RoleService
 from app.modules.common.config.database import SessionLocal
 
@@ -76,7 +76,7 @@ async def startup_event():
 
 # Include routers
 app.include_router(users_router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
-app.include_router(product_api.router)
+app.include_router(products_router, prefix=f"{settings.API_V1_STR}/products", tags=["products"])
 
 @app.get("/")
 async def root():
