@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List
 from app.modules.common.config.database import get_db
@@ -15,17 +15,27 @@ router = APIRouter()
 @router.post("/", response_model=Product)
 @check_permissions(["create_product"])
 def create_product(
+    request: Request,
     product: ProductCreate,
     db: Session = Depends(get_db)
 ):
     """
     Create a new product. Requires 'create_product' permission.
     """
-    return ProductService.create_product(db=db, product=product)
+    try:
+        user_id = request.state.user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+            
+        return ProductService.create_product(db=db, product=product, user_id=user_id)
+    except Exception as e:
+        logger.error(f"Error creating product: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/", response_model=List[Product])
 @check_permissions(["read_product"])
 def get_products(
+    request: Request,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
@@ -33,7 +43,16 @@ def get_products(
     """
     Get all products. Requires 'read_product' permission.
     """
-    return ProductService.get_products(db=db, skip=skip, limit=limit)
+    try:
+        user_id = request.state.user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+            
+        products = ProductService.get_products(db=db, skip=skip, limit=limit, user_id=user_id)
+        return products
+    except Exception as e:
+        logger.error(f"Error getting products: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{product_id}", response_model=Product)
 @check_permissions(["update_product"])
