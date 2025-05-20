@@ -46,7 +46,7 @@ async def https_redirect_middleware(request: Request, call_next):
         logger.error(f"Middleware error: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error("Middleware error: {str(e)}")
+            content=StandardResponse.error(f"Middleware error: {str(e)}")
         )
 
 # Set CORS middleware
@@ -86,7 +86,7 @@ async def root():
         logger.error(f"Error serving index.html: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error("Error serving static file")
+            content=StandardResponse.error(f"Error serving static file: {str(e)}")
         )
 
 @app.get("/api")
@@ -104,7 +104,7 @@ async def api_info():
         logger.error(f"Error in api_info: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error("Error in api_info: {str(e)}")
+            content=StandardResponse.error(f"Error in api_info: {str(e)}")
         )
 
 @app.exception_handler(RequestValidationError)
@@ -120,5 +120,5 @@ async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unexpected error: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content=StandardResponse.error("Unexpected error: {str(exc)}")
+        content=StandardResponse.error(f"Unexpected error: {str(exc)}")
     ) 
