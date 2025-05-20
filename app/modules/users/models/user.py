@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from app.modules.common.config.database import Base
 
 class User(Base):
@@ -8,4 +9,8 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    is_active = Column(Boolean, default=True) 
+    is_active = Column(Boolean, default=True)
+    role_id = Column(Integer, ForeignKey('roles.id'))
+    
+    # Relationships
+    role = relationship("Role", back_populates="users") 

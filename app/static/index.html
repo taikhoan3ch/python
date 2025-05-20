@@ -3,108 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management</title>
+    <title>Product Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .container { margin-top: 2rem; }
-        .user-card { margin-bottom: 1rem; }
+        .product-card { margin-bottom: 1rem; }
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="mb-4">User Management</h1>
-        
-        <!-- Add User Form -->
-        <div class="card mb-4">
+    <!-- Login Form -->
+    <div id="loginSection" class="container login-container">
+        <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Add New User</h5>
+                <h5 class="card-title mb-0">Login</h5>
             </div>
             <div class="card-body">
-                <form id="addUserForm">
+                <form id="loginForm">
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" required>
+                        <label for="loginEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" required>
                     </div>
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" required>
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (Hidden until logged in) -->
+    <div id="mainContent" class="container hidden">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Product Management</a>
+                <div class="d-flex">
+                    <span id="userInfo" class="me-3"></span>
+                    <button class="btn btn-outline-danger" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Add Product Form (Only visible to users with create_product permission) -->
+        <div id="addProductSection" class="card mb-4 hidden">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Add New Product</h5>
+            </div>
+            <div class="card-body">
+                <form id="addProductForm">
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Product Name</label>
+                        <input type="text" class="form-control" id="productName" required>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" required>
+                        <label for="productDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="productDescription" rows="3"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">Add User</button>
+                    <div class="mb-3">
+                        <label for="productPrice" class="form-label">Price</label>
+                        <input type="number" class="form-control" id="productPrice" step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productStock" class="form-label">Stock</label>
+                        <input type="number" class="form-control" id="productStock" min="0" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
                 </form>
             </div>
         </div>
 
-        <!-- Users List -->
+        <!-- Products List -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Users List</h5>
-                <div>
-                    <button class="btn btn-success me-2" onclick="createUsersTable()">Create Table</button>
-                    <button class="btn btn-primary" onclick="loadUsers()">Refresh</button>
-                </div>
+                <h5 class="card-title mb-0">Products List</h5>
+                <button class="btn btn-primary" onclick="loadProducts()">Refresh</button>
             </div>
             <div class="card-body">
-                <div id="usersList"></div>
+                <div id="productsList"></div>
             </div>
         </div>
     </div>
 
     <script>
         const API_URL = '/api/v1';
+        let currentUser = null;
+        let userPermissions = [];
 
-        // Load users on page load
-        document.addEventListener('DOMContentLoaded', loadUsers);
+        // Check if user is logged in
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Verify token and get user info
+                fetch(`${API_URL}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentUser = data.data;
+                        userPermissions = data.data.permissions || [];
+                        showMainContent();
+                    } else {
+                        showLoginForm();
+                    }
+                })
+                .catch(() => showLoginForm());
+            } else {
+                showLoginForm();
+            }
+        }
 
-        // Add user form submission
-        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+        // Show/hide sections based on permissions
+        function updateUIBasedOnPermissions() {
+            const addProductSection = document.getElementById('addProductSection');
+            if (userPermissions.includes('create_product')) {
+                addProductSection.classList.remove('hidden');
+            } else {
+                addProductSection.classList.add('hidden');
+            }
+        }
+
+        function showMainContent() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('userInfo').textContent = `Logged in as: ${currentUser.username}`;
+            updateUIBasedOnPermissions();
+            loadProducts();
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            localStorage.removeItem('token');
+            currentUser = null;
+            userPermissions = [];
+        }
+
+        function logout() {
+            showLoginForm();
+        }
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const userData = {
-                email: document.getElementById('email').value,
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value
+            const loginData = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
             };
 
             try {
-                const response = await fetch(`${API_URL}/users/`, {
+                const response = await fetch(`${API_URL}/users/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(userData)
+                    body: JSON.stringify(loginData)
                 });
 
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(result.message || 'User added successfully!');
-                    document.getElementById('addUserForm').reset();
-                    loadUsers();
+                    localStorage.setItem('token', result.data.token);
+                    currentUser = result.data.user;
+                    userPermissions = result.data.user.permissions || [];
+                    showMainContent();
                 } else {
                     alert(`Error: ${result.message}`);
                 }
             } catch (error) {
-                alert('Error adding user: ' + error.message);
+                alert('Error logging in: ' + error.message);
             }
         });
 
-        // Load users function
-        async function loadUsers() {
+        // Add product form submission
+        document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productData = {
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                stock: parseInt(document.getElementById('productStock').value)
+            };
+
             try {
-                const response = await fetch(`${API_URL}/users/`);
+                const response = await fetch(`${API_URL}/products/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message || 'Product added successfully!');
+                    document.getElementById('addProductForm').reset();
+                    loadProducts();
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                alert('Error adding product: ' + error.message);
+            }
+        });
+
+        // Load products function
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products/`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const result = await response.json();
                 
-                const usersList = document.getElementById('usersList');
+                const result = await response.json();
+                const productsList = document.getElementById('productsList');
                 
                 if (!result.success) {
-                    usersList.innerHTML = `
+                    productsList.innerHTML = `
                         <div class="alert alert-danger">
                             ${result.message}
                         </div>
@@ -112,59 +246,79 @@
                     return;
                 }
 
-                const users = result.data;
-                if (!Array.isArray(users)) {
-                    throw new Error('Invalid response format: expected an array of users');
+                const products = result.data;
+                if (!Array.isArray(products)) {
+                    throw new Error('Invalid response format: expected an array of products');
                 }
                 
-                if (users.length === 0) {
-                    usersList.innerHTML = '<div class="alert alert-info">No users found</div>';
+                if (products.length === 0) {
+                    productsList.innerHTML = '<div class="alert alert-info">No products found</div>';
                     return;
                 }
 
-                usersList.innerHTML = users.map(user => `
-                    <div class="card user-card">
+                productsList.innerHTML = products.map(product => `
+                    <div class="card product-card">
                         <div class="card-body">
-                            <h5 class="card-title">${user.username}</h5>
-                            <p class="card-text">Email: ${user.email}</p>
-                            <p class="card-text">ID: ${user.id}</p>
-                            <p class="card-text">Status: ${user.is_active ? 'Active' : 'Inactive'}</p>
+                            <h5 class="card-title">${product.name}</h5>
+                            <p class="card-text">${product.description || 'No description'}</p>
+                            <p class="card-text">Price: $${product.price.toFixed(2)}</p>
+                            <p class="card-text">Stock: ${product.stock}</p>
+                            ${userPermissions.includes('update_product') ? `
+                                <button class="btn btn-warning btn-sm me-2" onclick="editProduct(${product.id})">Edit</button>
+                            ` : ''}
+                            ${userPermissions.includes('delete_product') ? `
+                                <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Delete</button>
+                            ` : ''}
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Error loading users:', error);
-                const usersList = document.getElementById('usersList');
-                usersList.innerHTML = `
+                console.error('Error loading products:', error);
+                const productsList = document.getElementById('productsList');
+                productsList.innerHTML = `
                     <div class="alert alert-danger">
-                        Error loading users: ${error.message}
+                        Error loading products: ${error.message}
                     </div>
                 `;
             }
         }
 
-        // Create users table function
-        async function createUsersTable() {
+        // Edit product function
+        async function editProduct(productId) {
+            // Implementation for editing product
+            // This would typically open a modal or navigate to an edit page
+            alert('Edit functionality to be implemented');
+        }
+
+        // Delete product function
+        async function deleteProduct(productId) {
+            if (!confirm('Are you sure you want to delete this product?')) {
+                return;
+            }
+
             try {
-                const response = await fetch(`${API_URL}/users/create-table`, {
-                    method: 'POST',
+                const response = await fetch(`${API_URL}/products/${productId}`, {
+                    method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
 
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(result.message || 'Users table created successfully!');
-                    loadUsers();
+                    alert(result.message || 'Product deleted successfully!');
+                    loadProducts();
                 } else {
                     alert(`Error: ${result.message}`);
                 }
             } catch (error) {
-                alert('Error creating users table: ' + error.message);
+                alert('Error deleting product: ' + error.message);
             }
         }
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', checkAuth);
     </script>
 </body>
 </html> 
