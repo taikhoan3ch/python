@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict, Any
 import logging
 
 from app.modules.common.config.database import get_db
@@ -11,12 +11,12 @@ from app.main import StandardResponse
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.post("/")
+@router.post("/", response_model=Dict[str, Any])
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
-        created_user = user_service.create_user(db=db, user=user)
+        db_user = user_service.create_user(db=db, user=user)
         return StandardResponse.success(
-            data=created_user,
+            data=db_user,
             message="User created successfully"
         )
     except Exception as e:
@@ -24,34 +24,20 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         logger.error(f"Error in create_user endpoint: {error_message}")
         
         if "Database table" in error_message:
-            return StandardResponse.error("Database table error. Please check if the database is properly initialized.")
+            raise HTTPException(status_code=500, detail="Database table error. Please check if the database is properly initialized.")
         elif "already registered" in error_message or "already exists" in error_message:
-            return StandardResponse.error(error_message)
+            raise HTTPException(status_code=400, detail=error_message)
         else:
-            return StandardResponse.error(f"Error creating user: {error_message}")
+            raise HTTPException(status_code=500, detail=f"Error creating user: {error_message}")
 
-@router.get("/")
+@router.get("/", response_model=List[User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    try:
-        users = user_service.get_users(db, skip=skip, limit=limit)
-        return StandardResponse.success(
-            data=users,
-            message="Users retrieved successfully"
-        )
-    except Exception as e:
-        logger.error(f"Error in read_users endpoint: {str(e)}", exc_info=True)
-        return StandardResponse.error("Error retrieving users")
+    users = user_service.get_users(db, skip=skip, limit=limit)
+    return users
 
-@router.get("/{user_id}")
+@router.get("/{user_id}", response_model=User)
 def read_user(user_id: int, db: Session = Depends(get_db)):
-    try:
-        db_user = user_service.get_user(db, user_id=user_id)
-        if db_user is None:
-            return StandardResponse.error("User not found")
-        return StandardResponse.success(
-            data=db_user,
-            message="User retrieved successfully"
-        )
-    except Exception as e:
-        logger.error(f"Error in read_user endpoint: {str(e)}", exc_info=True)
-        return StandardResponse.error("Error retrieving user") 
+    db_user = user_service.get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user 
