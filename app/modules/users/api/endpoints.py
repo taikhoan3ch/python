@@ -95,7 +95,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
         logger.error(f"Error in get_current_user endpoint: {str(e)}")
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error("Internal server error4")
+            content=StandardResponse.error("Error in get_current_user endpoint: {str(e)}")
         )
 
 @router.get("/{user_id}")
