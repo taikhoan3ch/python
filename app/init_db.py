@@ -4,10 +4,6 @@ from app.modules.users.models.user import User
 from app.modules.users.schemas.user import UserCreate
 from app.modules.users.services.user_service import create_user
 
-def drop_all_tables():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-
 def init_db():
     Base.metadata.create_all(bind=engine)
     

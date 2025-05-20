@@ -7,7 +7,6 @@ from typing import Optional, Any, Dict
 import logging
 from app.modules.common.config.settings import settings
 from app.modules.users.api.endpoints import router as users_router
-from app.init_db import drop_all_tables
 import os
 
 # Configure logging
@@ -101,18 +100,6 @@ async def api_info():
         return JSONResponse(
             status_code=500,
             content=StandardResponse.error("Internal server error")
-        )
-
-@app.delete("/api/drop-all-tables")
-async def drop_tables():
-    try:
-        drop_all_tables()
-        return StandardResponse.success(message="All tables have been dropped successfully")
-    except Exception as e:
-        logger.error(f"Error dropping tables: {str(e)}", exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error("Error dropping tables")
         )
 
 @app.exception_handler(RequestValidationError)
