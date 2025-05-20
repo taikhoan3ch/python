@@ -42,7 +42,11 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Users List</h5>
-                <button class="btn btn-primary" onclick="loadUsers()">Refresh</button>
+                <div>
+                    <button class="btn btn-success me-2" onclick="createUsersTable()">Create Table</button>
+                    <button class="btn btn-danger me-2" onclick="dropAllTables()">Delete All Tables</button>
+                    <button class="btn btn-primary" onclick="loadUsers()">Refresh</button>
+                </div>
             </div>
             <div class="card-body">
                 <div id="usersList"></div>
@@ -137,6 +141,56 @@
                         Error loading users: ${error.message}
                     </div>
                 `;
+            }
+        }
+
+        // Create users table function
+        async function createUsersTable() {
+            try {
+                const response = await fetch(`${API_URL}/users/create-table`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message || 'Users table created successfully!');
+                    loadUsers();
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                alert('Error creating users table: ' + error.message);
+            }
+        }
+
+        // Drop all tables function
+        async function dropAllTables() {
+            if (!confirm('Are you sure you want to delete all tables? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/drop-all-tables', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message || 'All tables have been dropped successfully!');
+                    loadUsers();
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                alert('Error dropping tables: ' + error.message);
             }
         }
     </script>
