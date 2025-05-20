@@ -56,14 +56,4 @@ def create_user(db: Session, user: UserCreate):
             
     except Exception as e:
         logger.error(f"Error creating user: {str(e)}")
-        raise Exception(f"Failed to create user: {str(e)}")
-
-def create_users_table(db: Session):
-    try:
-        from app.modules.users.models.user import User
-        User.__table__.create(db.bind)
-        logger.info("Successfully created users table")
-        return {"success": True, "message": "Users table created successfully"}
-    except Exception as e:
-        logger.error(f"Error creating users table: {str(e)}")
-        raise Exception(f"Failed to create users table: {str(e)}") 
+        raise Exception(f"Failed to create user: {str(e)}") 
