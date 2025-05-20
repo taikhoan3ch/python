@@ -289,60 +289,60 @@
 
         // Load products function
         async function loadProducts() {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    throw new Error('No authentication token found');
-                }
+            // try {
+            //     const token = localStorage.getItem('token');
+            //     if (!token) {
+            //         throw new Error('No authentication token found');
+            //     }
 
-                const response = await fetch(`${API_URL}/products/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+            //     const response = await fetch(`${API_URL}/products/`, {
+            //         headers: {
+            //             'Authorization': `Bearer ${token}`
+            //         }
+            //     });
                 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
+            //     if (!response.ok) {
+            //         const errorData = await response.json();
+            //         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            //     }
                 
-                const result = await response.json();
-                const productsList = document.getElementById('productsList');
+            //     const result = await response.json();
+            //     const productsList = document.getElementById('productsList');
                 
-                if (!Array.isArray(result)) {
-                    throw new Error('Invalid response format: expected an array of products');
-                }
+            //     if (!Array.isArray(result)) {
+            //         throw new Error('Invalid response format: expected an array of products');
+            //     }
                 
-                if (result.length === 0) {
-                    productsList.innerHTML = '<div class="alert alert-info">No products found</div>';
-                    return;
-                }
+            //     if (result.length === 0) {
+            //         productsList.innerHTML = '<div class="alert alert-info">No products found</div>';
+            //         return;
+            //     }
 
-                productsList.innerHTML = result.map(product => `
-                    <div class="card product-card">
-                        <div class="card-body">
-                            <h5 class="card-title">${product.name}</h5>
-                            <p class="card-text">${product.description || 'No description'}</p>
-                            <p class="card-text">Price: $${product.price.toFixed(2)}</p>
-                            <p class="card-text">Stock: ${product.stock}</p>
-                            ${userPermissions.includes('update_product') ? `
-                                <button class="btn btn-warning btn-sm me-2" onclick="editProduct(${product.id})">Edit</button>
-                            ` : ''}
-                            ${userPermissions.includes('delete_product') ? `
-                                <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Delete</button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading products:', error);
-                const productsList = document.getElementById('productsList');
-                productsList.innerHTML = `
-                    <div class="alert alert-danger">
-                        Error loading products: ${error.message}
-                    </div>
-                `;
-            }
+            //     productsList.innerHTML = result.map(product => `
+            //         <div class="card product-card">
+            //             <div class="card-body">
+            //                 <h5 class="card-title">${product.name}</h5>
+            //                 <p class="card-text">${product.description || 'No description'}</p>
+            //                 <p class="card-text">Price: $${product.price.toFixed(2)}</p>
+            //                 <p class="card-text">Stock: ${product.stock}</p>
+            //                 ${userPermissions.includes('update_product') ? `
+            //                     <button class="btn btn-warning btn-sm me-2" onclick="editProduct(${product.id})">Edit</button>
+            //                 ` : ''}
+            //                 ${userPermissions.includes('delete_product') ? `
+            //                     <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Delete</button>
+            //                 ` : ''}
+            //             </div>
+            //         </div>
+            //     `).join('');
+            // } catch (error) {
+            //     console.error('Error loading products:', error);
+            //     const productsList = document.getElementById('productsList');
+            //     productsList.innerHTML = `
+            //         <div class="alert alert-danger">
+            //             Error loading products: ${error.message}
+            //         </div>
+            //     `;
+            // }
         }
 
         // Edit product function
