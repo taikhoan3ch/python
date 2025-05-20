@@ -34,16 +34,11 @@ def create_product(
         )
     except ValueError as e:
         logger.error(f"Validation error creating product: {str(e)}")
-        return JSONResponse(
-            status_code=400,
-            content=StandardResponse.error(str(e))
-        )
+        return StandardResponse.error(str(e))
+    
     except Exception as e:
         logger.error(f"Error creating product: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error creating product: {str(e)}")
-        )
+        return StandardResponse.error(f"Error creating product: {str(e)}")
 
 @router.get("/", response_model=List[Product])
 @check_permissions(["read_product"])
