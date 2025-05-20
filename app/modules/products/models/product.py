@@ -10,7 +10,7 @@ class Product(Base):
     description = Column(Text)
     price = Column(Float)
     stock = Column(Integer, default=0)
-    created_by = Column(Integer, ForeignKey('users.id'))
+    created_by = Column(Integer, ForeignKey('users.id'), index=True)
     
     # Relationships
     creator = relationship("User", back_populates="products") 
