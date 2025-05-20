@@ -75,13 +75,14 @@
                     body: JSON.stringify(userData)
                 });
 
-                if (response.ok) {
-                    alert('User added successfully!');
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message || 'User added successfully!');
                     document.getElementById('addUserForm').reset();
                     loadUsers();
                 } else {
-                    const error = await response.json();
-                    alert(`Error: ${error.detail}`);
+                    alert(`Error: ${result.message}`);
                 }
             } catch (error) {
                 alert('Error adding user: ' + error.message);
@@ -95,9 +96,20 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const users = await response.json();
+                const result = await response.json();
                 
                 const usersList = document.getElementById('usersList');
+                
+                if (!result.success) {
+                    usersList.innerHTML = `
+                        <div class="alert alert-danger">
+                            ${result.message}
+                        </div>
+                    `;
+                    return;
+                }
+
+                const users = result.data;
                 if (!Array.isArray(users)) {
                     throw new Error('Invalid response format: expected an array of users');
                 }
