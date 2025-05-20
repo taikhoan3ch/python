@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.modules.common.config.database import engine, Base, SessionLocal
 from app.modules.users.models.user import User
 from app.modules.users.schemas.user import UserCreate
-from app.modules.users.crud.user import create_user
+from app.modules.users.services.user_service import create_user
 
 def drop_all_tables():
     Base.metadata.drop_all(bind=engine)
