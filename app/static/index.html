@@ -92,9 +92,21 @@
         async function loadUsers() {
             try {
                 const response = await fetch(`${API_URL}/users/`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const users = await response.json();
                 
                 const usersList = document.getElementById('usersList');
+                if (!Array.isArray(users)) {
+                    throw new Error('Invalid response format: expected an array of users');
+                }
+                
+                if (users.length === 0) {
+                    usersList.innerHTML = '<div class="alert alert-info">No users found</div>';
+                    return;
+                }
+
                 usersList.innerHTML = users.map(user => `
                     <div class="card user-card">
                         <div class="card-body">
@@ -106,7 +118,13 @@
                     </div>
                 `).join('');
             } catch (error) {
-                alert('Error loading users: ' + error.message);
+                console.error('Error loading users:', error);
+                const usersList = document.getElementById('usersList');
+                usersList.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading users: ${error.message}
+                    </div>
+                `;
             }
         }
     </script>
