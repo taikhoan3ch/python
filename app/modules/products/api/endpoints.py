@@ -22,12 +22,18 @@ def create_product(
     """
     Create a new product. Requires 'create_product' permission.
     """
+    logger.info("Starting product creation process")
     try:
         user_id = request.state.user.get("id")
+        logger.debug(f"Retrieved user_id: {user_id}")
+        
         if not user_id:
+            logger.warning("Authentication failed - no user_id found")
             raise HTTPException(status_code=401, detail="User not authenticated")
             
+        logger.info(f"Creating product for user_id: {user_id}")
         created_product = ProductService.create_product(db=db, product=product, user_id=user_id)
+        logger.info(f"Successfully created product with ID: {created_product.id}")
         return created_product
    
     except ValueError as e:
@@ -49,17 +55,25 @@ def get_products(
     """
     Get all products. Requires 'read_product' permission.
     """
+    logger.info(f"Starting get_products request with skip={skip}, limit={limit}")
     try:
         if skip < 0:
+            logger.warning(f"Invalid skip parameter: {skip}")
             raise ValueError("Skip parameter cannot be negative")
         if limit < 1 or limit > 1000:
+            logger.warning(f"Invalid limit parameter: {limit}")
             raise ValueError("Limit must be between 1 and 1000")
             
         user_id = request.state.user.get("id")
+        logger.debug(f"Retrieved user_id: {user_id}")
+        
         if not user_id:
+            logger.warning("Authentication failed - no user_id found")
             raise HTTPException(status_code=401, detail="User not authenticated")
             
+        logger.info(f"Fetching products for user_id: {user_id}")
         products = ProductService.get_products(db=db, skip=skip, limit=limit, user_id=user_id)
+        logger.info(f"Successfully retrieved {len(products)} products")
         return StandardResponse.success(
             data=products,
             message="Products retrieved successfully"
@@ -88,17 +102,23 @@ def update_product(
     """
     Update a product. Requires 'update_product' permission.
     """
+    logger.info(f"Starting product update process for product_id: {product_id}")
     try:
         user_id = request.state.user.get("id")
+        logger.debug(f"Retrieved user_id: {user_id}")
+        
         if not user_id:
+            logger.warning("Authentication failed - no user_id found")
             raise HTTPException(status_code=401, detail="User not authenticated")
             
+        logger.info(f"Updating product {product_id} for user_id: {user_id}")
         updated_product = ProductService.update_product(
             db=db,
             product_id=product_id,
             product=product,
             user_id=user_id
         )
+        logger.info(f"Successfully updated product {product_id}")
         return StandardResponse.success(
             data=updated_product,
             message="Product updated successfully"
@@ -126,12 +146,18 @@ def delete_product(
     """
     Delete a product. Requires 'delete_product' permission.
     """
+    logger.info(f"Starting product deletion process for product_id: {product_id}")
     try:
         user_id = request.state.user.get("id")
+        logger.debug(f"Retrieved user_id: {user_id}")
+        
         if not user_id:
+            logger.warning("Authentication failed - no user_id found")
             raise HTTPException(status_code=401, detail="User not authenticated")
             
+        logger.info(f"Deleting product {product_id} for user_id: {user_id}")
         success = ProductService.delete_product(db=db, product_id=product_id, user_id=user_id)
+        logger.info(f"Successfully deleted product {product_id}")
         return StandardResponse.success(
             message="Product deleted successfully"
         )
@@ -154,8 +180,11 @@ def create_product_tables(db: Session = Depends(get_db)):
     """
     Create product table. Requires 'manage_database' permission.
     """
+    logger.info("Starting product tables creation process")
     try:
+        logger.debug("Calling ProductService.create_tables()")
         ProductService.create_tables()
+        logger.info("Successfully created product tables")
         return StandardResponse.success(message="Product tables created successfully")
     except Exception as e:
         logger.error(f"Error creating product tables: {str(e)}")
