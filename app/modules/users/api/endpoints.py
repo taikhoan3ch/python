@@ -67,7 +67,7 @@ async def get_users(
 
 @router.get("/me", response_model=UserResponse)
 @check_permissions([])  # No specific permissions required, just valid token
-async def get_current_user(
+async def get_current_user_info(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
