@@ -74,6 +74,10 @@
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="permission" class="form-label">Permission</label>
+                            <input type="text" class="form-control" id="permission" required>
+                        </div>
                         <button type="submit" class="btn btn-success w-100">Register</button>
                     </form>
                 </div>
@@ -125,6 +129,7 @@
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
             const role = document.getElementById('role').value;
+            const permission = document.getElementById('permission').value;
             const errorDiv = document.getElementById('error');
 
             try {
@@ -137,7 +142,8 @@
                         username,
                         email,
                         password,
-                        role
+                        role,
+                        permission
                     }),
                 });
 
