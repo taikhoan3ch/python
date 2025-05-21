@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
-import json
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -11,10 +10,9 @@ app = FastAPI(
 )
 
 # Set up CORS
-origins = json.loads(settings.BACKEND_CORS_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
