@@ -8,7 +8,7 @@ from app.modules.products.services.product_service import ProductService
 from fastapi.responses import JSONResponse
 import logging
 from app.modules.users.api.endpoints import get_current_user
-from app.modules.users.models import User
+from app.modules.users.models.user import User
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/products", tags=["products"])
