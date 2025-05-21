@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -14,14 +14,18 @@ app = FastAPI(
 # Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=["*"],  # Allow all origins for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Get the absolute path to the static directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(BASE_DIR, "app", "static")
+
 # Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Import and include routers
 from app.api.v1.api import api_router
@@ -29,10 +33,22 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
-    return FileResponse(os.path.join("app", "static", "index.html"))
+    try:
+        index_path = os.path.join(STATIC_DIR, "index.html")
+        if not os.path.exists(index_path):
+            raise HTTPException(status_code=404, detail="index.html not found")
+        return FileResponse(index_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/{path:path}")
 async def serve_static(path: str):
-    if path.endswith(".html"):
-        return FileResponse(os.path.join("app", "static", path))
-    return {"message": "Not Found"}, 404 
+    try:
+        if path.endswith(".html"):
+            file_path = os.path.join(STATIC_DIR, path)
+            if not os.path.exists(file_path):
+                raise HTTPException(status_code=404, detail=f"File {path} not found")
+            return FileResponse(file_path)
+        return {"message": "Not Found"}, 404
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
