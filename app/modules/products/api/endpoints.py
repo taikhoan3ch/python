@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.modules.common.config.database import get_db
@@ -8,9 +8,11 @@ from app.modules.products.services.product_service import ProductService
 from app.modules.common.utils.response import StandardResponse
 from fastapi.responses import JSONResponse
 import logging
+from app.modules.users.api.endpoints import get_current_user
+from app.modules.users.models.models import User
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(prefix="/products", tags=["products"])
 
 @router.post("/", response_model=Product)
 @check_permissions(["create_product"])
@@ -74,21 +76,18 @@ def get_products(
         logger.info(f"Fetching products for user_id: {user_id}")
         products = ProductService.get_products(db=db, skip=skip, limit=limit, user_id=user_id)
         logger.info(f"Successfully retrieved {len(products)} products")
-        return StandardResponse.success(
-            data=products,
-            message="Products retrieved successfully"
-        )
+        return {"success": True, "data": products}
     except ValueError as e:
         logger.error(f"Validation error getting products: {str(e)}")
         return JSONResponse(
             status_code=400,
-            content=StandardResponse.error(str(e))
+            content={"error": str(e)}
         )
     except Exception as e:
         logger.error(f"Error getting products: {str(e)}")
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error(f"Error getting products: {str(e)}")
+            content={"error": f"Error getting products: {str(e)}"}
         )
 
 @router.put("/{product_id}", response_model=Product)
@@ -119,21 +118,18 @@ def update_product(
             user_id=user_id
         )
         logger.info(f"Successfully updated product {product_id}")
-        return StandardResponse.success(
-            data=updated_product,
-            message="Product updated successfully"
-        )
+        return {"success": True, "data": updated_product}
     except ValueError as e:
         logger.error(f"Validation error updating product: {str(e)}")
         return JSONResponse(
             status_code=400,
-            content=StandardResponse.error(str(e))
+            content={"error": str(e)}
         )
     except Exception as e:
         logger.error(f"Error updating product: {str(e)}")
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error(f"Error updating product: {str(e)}")
+            content={"error": f"Error updating product: {str(e)}"}
         )
 
 @router.delete("/{product_id}")
@@ -158,20 +154,18 @@ def delete_product(
         logger.info(f"Deleting product {product_id} for user_id: {user_id}")
         success = ProductService.delete_product(db=db, product_id=product_id, user_id=user_id)
         logger.info(f"Successfully deleted product {product_id}")
-        return StandardResponse.success(
-            message="Product deleted successfully"
-        )
+        return {"success": True, "message": "Product deleted successfully"}
     except ValueError as e:
         logger.error(f"Validation error deleting product: {str(e)}")
         return JSONResponse(
             status_code=400,
-            content=StandardResponse.error(str(e))
+            content={"error": str(e)}
         )
     except Exception as e:
         logger.error(f"Error deleting product: {str(e)}")
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error(f"Error deleting product: {str(e)}")
+            content={"error": f"Error deleting product: {str(e)}"}
         )
 
 @router.post("/create-tables")
@@ -185,10 +179,10 @@ def create_product_tables(db: Session = Depends(get_db)):
         logger.debug("Calling ProductService.create_tables()")
         ProductService.create_tables()
         logger.info("Successfully created product tables")
-        return StandardResponse.success(message="Product tables created successfully")
+        return {"success": True, "message": "Product tables created successfully"}
     except Exception as e:
         logger.error(f"Error creating product tables: {str(e)}")
         return JSONResponse(
             status_code=500,
-            content=StandardResponse.error(f"Error creating product tables: {str(e)}")
+            content={"error": f"Error creating product tables: {str(e)}"}
         ) 

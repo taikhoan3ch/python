@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -45,8 +45,8 @@ async def https_redirect_middleware(request: Request, call_next):
     except Exception as e:
         logger.error(f"Middleware error: {str(e)}", exc_info=True)
         return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Middleware error: {str(e)}")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": f"Middleware error: {str(e)}"}
         )
 
 # Set CORS middleware
@@ -85,40 +85,33 @@ async def root():
     except Exception as e:
         logger.error(f"Error serving index.html: {str(e)}", exc_info=True)
         return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error serving static file: {str(e)}")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": f"Error serving static file: {str(e)}"}
         )
 
 @app.get("/api")
 async def api_info():
     try:
-        return StandardResponse.success(
-            data={
-                "version": settings.VERSION,
-                "docs_url": "/docs",
-                "redoc_url": "/redoc"
-            },
-            message="Welcome to User Info API"
-        )
+        return {"success": True, "message": "API is running", "data": {"version": "1.0.0"}}
     except Exception as e:
         logger.error(f"Error in api_info: {str(e)}", exc_info=True)
         return JSONResponse(
-            status_code=500,
-            content=StandardResponse.error(f"Error in api_info: {str(e)}")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": f"Error in api_info: {str(e)}"}
         )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     logger.error(f"Validation error: {exc.errors()}")
     return JSONResponse(
-        status_code=422,
-        content=StandardResponse.error("Validation error", data=exc.errors())
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"success": False, "message": "Validation error", "data": exc.errors()}
     )
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unexpected error: {str(exc)}", exc_info=True)
     return JSONResponse(
-        status_code=500,
-        content=StandardResponse.error(f"Unexpected error: {str(exc)}")
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"success": False, "message": f"Unexpected error: {str(exc)}"}
     ) 

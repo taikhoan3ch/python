@@ -201,7 +201,12 @@
                         'Authorization': `Bearer ${token}`
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Authentication failed');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         currentUser = data.data;
@@ -256,280 +261,381 @@
             showLoginForm();
         }
 
-        // Login form submission
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        // Login function
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const loginData = {
-                email: document.getElementById('loginEmail').value,
-                password: document.getElementById('loginPassword').value
-            };
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
-            try {
-                const response = await fetch(`${API_URL}/users/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(loginData)
-                });
+            const formData = new FormData();
+            formData.append('username', email);
+            formData.append('password', password);
 
-                const result = await response.json();
-                
-                if (result.success) {
-                    localStorage.setItem('token', result.data.token);
-                    currentUser = result.data.user;
-                    userPermissions = result.data.user.permissions || [];
+            fetch(`${API_URL}/users/login`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('token', data.access_token);
+                    currentUser = data.user;
+                    userPermissions = data.user.permissions || [];
                     showMainContent();
+                    showMessage('Login successful');
                 } else {
-                    showMessage(result.message, 'error');
+                    showMessage(data.message || 'Login failed', 'error');
                 }
-            } catch (error) {
-                showMessage('Error logging in: ' + error.message, 'error');
-            }
-        });
-
-        // Add product form submission
-        document.getElementById('addProductForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Validate inputs
-            const price = parseFloat(document.getElementById('productPrice').value);
-            const stock = parseInt(document.getElementById('productStock').value);
-            
-            if (isNaN(price) || price < 0) {
-                showMessage('Please enter a valid positive price', 'error');
-                return;
-            }
-            
-            if (isNaN(stock) || stock < 0) {
-                showMessage('Please enter a valid positive stock quantity', 'error');
-                return;
-            }
-            
-            const productData = {
-                name: document.getElementById('productName').value.trim(),
-                description: document.getElementById('productDescription').value.trim(),
-                price: price,
-                stock: stock
-            };
-
-            // Validate required fields
-            if (!productData.name) {
-                showMessage('Product name is required', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/products/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify(productData)
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showMessage(result.message || 'Product added successfully!');
-                    document.getElementById('addProductForm').reset();
-                    loadProducts();
-                } else {
-                    showMessage(result.message || 'Failed to add product', 'error');
-                }
-            } catch (error) {
-                console.error('Error adding product:', error);
-                showMessage('Error adding product: ' + (error.message || 'Unknown error occurred'), 'error');
-            }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Login failed', 'error');
+            });
         });
 
         // Load products function
-        async function loadProducts() {
-            // try {
-            //     const token = localStorage.getItem('token');
-            //     if (!token) {
-            //         throw new Error('No authentication token found');
-            //     }
-
-            //     const response = await fetch(`${API_URL}/products/`, {
-            //         headers: {
-            //             'Authorization': `Bearer ${token}`
-            //         }
-            //     });
-                
-            //     if (!response.ok) {
-            //         const errorData = await response.json();
-            //         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-            //     }
-                
-            //     const result = await response.json();
-            //     const productsList = document.getElementById('productsList');
-                
-            //     if (!Array.isArray(result)) {
-            //         throw new Error('Invalid response format: expected an array of products');
-            //     }
-                
-            //     if (result.length === 0) {
-            //         productsList.innerHTML = '<div class="alert alert-info">No products found</div>';
-            //         return;
-            //     }
-
-            //     productsList.innerHTML = result.map(product => `
-            //         <div class="card product-card">
-            //             <div class="card-body">
-            //                 <h5 class="card-title">${product.name}</h5>
-            //                 <p class="card-text">${product.description || 'No description'}</p>
-            //                 <p class="card-text">Price: $${product.price.toFixed(2)}</p>
-            //                 <p class="card-text">Stock: ${product.stock}</p>
-            //                 ${userPermissions.includes('update_product') ? `
-            //                     <button class="btn btn-warning btn-sm me-2" onclick="editProduct(${product.id})">Edit</button>
-            //                 ` : ''}
-            //                 ${userPermissions.includes('delete_product') ? `
-            //                     <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Delete</button>
-            //                 ` : ''}
-            //             </div>
-            //         </div>
-            //     `).join('');
-            // } catch (error) {
-            //     console.error('Error loading products:', error);
-            //     const productsList = document.getElementById('productsList');
-            //     productsList.innerHTML = `
-            //         <div class="alert alert-danger">
-            //             Error loading products: ${error.message}
-            //         </div>
-            //     `;
-            // }
+        function loadProducts() {
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/products`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load products');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    displayProducts(data.data);
+                } else {
+                    showMessage(data.message || 'Failed to load products', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to load products', 'error');
+            });
         }
 
-        // Edit product function
-        async function editProduct(productId) {
-            // Implementation for editing product
-            // This would typically open a modal or navigate to an edit page
-            alert('Edit functionality to be implemented');
+        // Add product function
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            const product = {
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                stock: parseInt(document.getElementById('productStock').value)
+            };
+
+            fetch(`${API_URL}/products`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(product)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to add product');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage('Product added successfully');
+                    loadProducts();
+                    this.reset();
+                } else {
+                    showMessage(data.message || 'Failed to add product', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to add product', 'error');
+            });
+        });
+
+        // Update product function
+        function updateProduct(productId, product) {
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/products/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(product)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update product');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage('Product updated successfully');
+                    loadProducts();
+                } else {
+                    showMessage(data.message || 'Failed to update product', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to update product', 'error');
+            });
         }
 
         // Delete product function
-        async function deleteProduct(productId) {
-            if (!confirm('Are you sure you want to delete this product?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/products/${productId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showMessage(result.message || 'Product deleted successfully!');
+        function deleteProduct(productId) {
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/products/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete product');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage('Product deleted successfully');
                     loadProducts();
                 } else {
-                    showMessage(result.message, 'error');
+                    showMessage(data.message || 'Failed to delete product', 'error');
                 }
-            } catch (error) {
-                showMessage('Error deleting product: ' + error.message, 'error');
-            }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to delete product', 'error');
+            });
         }
 
         // Database management functions
-        async function createRoleTables() {
-            try {
-                const response = await fetch(`${API_URL}/users/create-role-tables`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const result = await response.json();
-                showMessage(result.message || 'Role tables created successfully!');
-            } catch (error) {
-                showMessage('Error creating role tables: ' + error.message, 'error');
-            }
+        function createRoleTables() {
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/users/create-role-tables`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create role tables');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage('Role tables created successfully');
+                } else {
+                    showMessage(data.message || 'Failed to create role tables', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to create role tables', 'error');
+            });
         }
 
-        async function createUserTables() {
-            try {
-                const response = await fetch(`${API_URL}/users/create-user-tables`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const result = await response.json();
-                showMessage(result.message || 'User tables created successfully!');
-            } catch (error) {
-                showMessage('Error creating user tables: ' + error.message, 'error');
-            }
+        function createUserTables() {
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/users/create-user-tables`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create user tables');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage('User tables created successfully');
+                } else {
+                    showMessage(data.message || 'Failed to create user tables', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to create user tables', 'error');
+            });
         }
 
-        async function createProductTables() {
-            try {
-                const response = await fetch(`${API_URL}/products/create-tables`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const result = await response.json();
-                showMessage(result.message || 'Product tables created successfully!');
-            } catch (error) {
-                showMessage('Error creating product tables: ' + error.message, 'error');
-            }
+        function createProductTables() {
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/products/create-tables`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create product tables');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage('Product tables created successfully');
+                } else {
+                    showMessage(data.message || 'Failed to create product tables', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to create product tables', 'error');
+            });
         }
 
         // Database management functions
-        async function createTables() {
+        function createTables() {
             if (!confirm('Are you sure you want to create all database tables?')) {
                 return;
             }
             
-            try {
-                const response = await fetch(`${API_URL}/users/tables/create`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const data = await response.json();
-                
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/users/create-tables`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create tables');
+                }
+                return response.json();
+            })
+            .then(data => {
                 if (data.success) {
                     showMessage('Tables created successfully');
                 } else {
-                    showMessage('Failed to create tables: ' + data.message, 'error');
+                    showMessage(data.message || 'Failed to create tables', 'error');
                 }
-            } catch (error) {
-                showMessage('Error creating tables: ' + error.message, 'error');
-            }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to create tables', 'error');
+            });
         }
 
-        async function dropTables() {
+        function dropTables() {
             if (!confirm('WARNING: This will delete all data in the database. Are you absolutely sure?')) {
                 return;
             }
             
-            try {
-                const response = await fetch(`${API_URL}/users/tables/drop`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const data = await response.json();
-                
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/users/drop-tables`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to drop tables');
+                }
+                return response.json();
+            })
+            .then(data => {
                 if (data.success) {
                     showMessage('Tables dropped successfully');
                 } else {
-                    showMessage('Failed to drop tables: ' + data.message, 'error');
+                    showMessage(data.message || 'Failed to drop tables', 'error');
                 }
-            } catch (error) {
-                showMessage('Error dropping tables: ' + error.message, 'error');
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to drop tables', 'error');
+            });
+        }
+
+        // Display products function
+        function displayProducts(products) {
+            const productsList = document.getElementById('productsList');
+            
+            if (!Array.isArray(products) || products.length === 0) {
+                productsList.innerHTML = '<div class="alert alert-info">No products found</div>';
+                return;
             }
+
+            productsList.innerHTML = products.map(product => `
+                <div class="card product-card">
+                    <div class="card-body">
+                        <h5 class="card-title">${product.name}</h5>
+                        <p class="card-text">${product.description || 'No description'}</p>
+                        <p class="card-text">Price: $${product.price.toFixed(2)}</p>
+                        <p class="card-text">Stock: ${product.stock}</p>
+                        ${userPermissions.includes('update_product') ? `
+                            <button class="btn btn-warning btn-sm me-2" onclick="editProduct(${product.id})">Edit</button>
+                        ` : ''}
+                        ${userPermissions.includes('delete_product') ? `
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Delete</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Edit product function
+        function editProduct(productId) {
+            const token = localStorage.getItem('token');
+            fetch(`${API_URL}/products/${productId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to get product details');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const product = data.data;
+                    // Populate form with product data
+                    document.getElementById('productName').value = product.name;
+                    document.getElementById('productDescription').value = product.description || '';
+                    document.getElementById('productPrice').value = product.price;
+                    document.getElementById('productStock').value = product.stock;
+                    
+                    // Change form submit handler temporarily
+                    const form = document.getElementById('addProductForm');
+                    const originalSubmitHandler = form.onsubmit;
+                    
+                    form.onsubmit = function(e) {
+                        e.preventDefault();
+                        const updatedProduct = {
+                            name: document.getElementById('productName').value,
+                            description: document.getElementById('productDescription').value,
+                            price: parseFloat(document.getElementById('productPrice').value),
+                            stock: parseInt(document.getElementById('productStock').value)
+                        };
+
+                        updateProduct(productId, updatedProduct);
+                        
+                        // Restore original submit handler
+                        form.onsubmit = originalSubmitHandler;
+                        form.reset();
+                    };
+                } else {
+                    showMessage(data.message || 'Failed to get product details', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage(error.message || 'Failed to get product details', 'error');
+            });
         }
 
         // Check authentication on page load
