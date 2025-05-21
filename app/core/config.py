@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic_settings import BaseSettings
 from pydantic import PostgresDsn, validator
 import secrets
+import json
 
 
 class Settings(BaseSettings):
@@ -18,6 +19,8 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "app"
     DATABASE_URL: Optional[PostgresDsn] = None
+
+    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
 
     @validator("DATABASE_URL", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: dict[str, any]) -> any:
