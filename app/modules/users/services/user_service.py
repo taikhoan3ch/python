@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.modules.users.models.user import User
 from app.modules.users.schemas.user import UserCreate
-from app.modules.common.utils.security import get_password_hash
+from app.modules.common.utils.security import get_password_hash, verify_password
 import logging
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.modules.common.config.database import Base, engine
@@ -16,6 +16,23 @@ def get_user_by_email(db: Session, email: str):
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(User).offset(skip).limit(limit).all()
+
+def authenticate_user(db: Session, email: str, password: str):
+    """
+    Authenticate a user by email and password
+    """
+    try:
+        user = get_user_by_email(db, email)
+        if not user:
+            logger.warning(f"Login attempt with non-existent email: {email}")
+            return None
+        if not verify_password(password, user.hashed_password):
+            logger.warning(f"Invalid password for user: {email}")
+            return None
+        return user
+    except Exception as e:
+        logger.error(f"Error during authentication: {str(e)}")
+        return None
 
 def create_user(db: Session, user: UserCreate):
     try:
