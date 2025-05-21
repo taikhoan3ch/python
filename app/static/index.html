@@ -3,643 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Management System</title>
+    <title>Login - FastAPI Backend</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .container { margin-top: 2rem; }
-        .product-card { margin-bottom: 1rem; }
+        body {
+            background-color: #f8f9fa;
+        }
         .login-container {
             max-width: 400px;
             margin: 100px auto;
-        }
-        .hidden {
-            display: none;
-        }
-        .message-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            max-width: 300px;
-        }
-        .message {
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            animation: slideIn 0.3s ease-out;
-        }
-        .message-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .message-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .message-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-    <!-- Login Form -->
-    <div id="loginSection" class="container login-container">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Login</h5>
-            </div>
-            <div class="card-body">
-                <form id="loginForm">
-                    <div class="mb-3">
-                        <label for="loginEmail" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="loginEmail" value="taikhoan3ch@gmail.com" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="loginPassword" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="loginPassword" value="123123" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content (Hidden until logged in) -->
-    <div id="mainContent" class="container hidden">
-        <!-- Message Container -->
-        <div id="messageContainer" class="message-container"></div>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">Product Management</a>
-                <div class="d-flex">
-                    <span id="userInfo" class="me-3"></span>
-                    <button class="btn btn-outline-danger" onclick="logout()">Logout</button>
+    <div class="container">
+        <div class="login-container">
+            <h2 class="text-center mb-4">Login</h2>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" required>
                 </div>
-            </div>
-        </nav>
-
-        <!-- Database Management Section (Only visible to admin) -->
-        <div id="dbManagementSection" class="card mb-4 hidden">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Database Management</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <button class="btn btn-primary w-100 mb-2" onclick="createRoleTables()">Create Role Tables</button>
-                    </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-primary w-100 mb-2" onclick="createUserTables()">Create User Tables</button>
-                    </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-primary w-100 mb-2" onclick="createProductTables()">Create Product Tables</button>
-                    </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" required>
                 </div>
-            </div>
-        </div>
-
-        <!-- Add Product Form (Only visible to users with create_product permission) -->
-        <div id="addProductSection" class="card mb-4 hidden">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Add New Product</h5>
-            </div>
-            <div class="card-body">
-                <form id="addProductForm">
-                    <div class="mb-3">
-                        <label for="productName" class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="productName" value="Product 1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="productDescription" value="Description 1" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productPrice" class="form-label">Price</label>
-                        <input type="number" class="form-control" id="productPrice" value="100" step="0.01" min="0" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="productStock" class="form-label">Stock</label>
-                        <input type="number" class="form-control" id="productStock" value="10" min="0" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add Product</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Products List -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Products List</h5>
-                <button class="btn btn-primary" onclick="loadProducts()">Refresh</button>
-            </div>
-            <div class="card-body">
-                <div id="productsList"></div>
-            </div>
-        </div>
-
-        <!-- Database Management Section (Admin Only) -->
-        <div id="dbManagementSection" class="card mt-4 hidden">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Database Management</h5>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-warning">
-                    <strong>Warning:</strong> These operations are for administrators only and can affect the entire database.
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary" onclick="createTables()">Create Tables</button>
-                    <button class="btn btn-danger" onclick="dropTables()">Drop Tables</button>
-                </div>
-            </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <div id="error" class="alert alert-danger mt-3" style="display: none;"></div>
         </div>
     </div>
 
     <script>
-        const API_URL = '/api/v1';
-        let currentUser = null;
-        let userPermissions = [];
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
 
-        // Function to show messages
-        function showMessage(message, type = 'success') {
-            const messageContainer = document.getElementById('messageContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message message-${type}`;
-            messageDiv.textContent = message;
-            
-            messageContainer.appendChild(messageDiv);
-            
-            // Remove message after 5 seconds
-            setTimeout(() => {
-                messageDiv.style.opacity = '0';
-                messageDiv.style.transition = 'opacity 0.3s ease-out';
-                setTimeout(() => messageDiv.remove(), 300);
-            }, 5000);
-        }
-
-        // Check if user is logged in
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            if (token) {
-                // Verify token and get user info
-                fetch(`${API_URL}/users/me`, {
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Authentication failed');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        currentUser = data.data;
-                        userPermissions = data.data.permissions || [];
-                        showMainContent();
-                    } else {
-                        showLoginForm();
-                    }
-                })
-                .catch(() => showLoginForm());
-            } else {
-                showLoginForm();
-            }
-        }
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'username': username,
+                        'password': password,
+                    }),
+                });
 
-        // Show/hide sections based on permissions
-        function updateUIBasedOnPermissions() {
-            const addProductSection = document.getElementById('addProductSection');
-            const dbManagementSection = document.getElementById('dbManagementSection');
-            
-            if (userPermissions.includes('create_product')) {
-                addProductSection.classList.remove('hidden');
-            } else {
-                addProductSection.classList.add('hidden');
-            }
-
-            // Show database management section only for admin
-            if (userPermissions.includes('manage_tables')) {
-                dbManagementSection.classList.remove('hidden');
-            } else {
-                dbManagementSection.classList.add('hidden');
-            }
-        }
-
-        function showMainContent() {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('userInfo').textContent = `Logged in as: ${currentUser.username}`;
-            updateUIBasedOnPermissions();
-            loadProducts();
-        }
-
-        function showLoginForm() {
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('mainContent').classList.add('hidden');
-            localStorage.removeItem('token');
-            currentUser = null;
-            userPermissions = [];
-        }
-
-        function logout() {
-            showLoginForm();
-        }
-
-        // Login function
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            const formData = new FormData();
-            formData.append('username', email);
-            formData.append('password', password);
-
-            fetch(`${API_URL}/users/login`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Login failed');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
+                if (response.ok) {
+                    const data = await response.json();
                     localStorage.setItem('token', data.access_token);
-                    currentUser = data.user;
-                    userPermissions = data.user.permissions || [];
-                    showMainContent();
-                    showMessage('Login successful');
+                    window.location.href = '/static/setup.html';
                 } else {
-                    showMessage(data.message || 'Login failed', 'error');
+                    const error = await response.json();
+                    errorDiv.textContent = error.detail || 'Login failed';
+                    errorDiv.style.display = 'block';
                 }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Login failed', 'error');
-            });
+            } catch (error) {
+                errorDiv.textContent = 'An error occurred';
+                errorDiv.style.display = 'block';
+            }
         });
-
-        // Load products function
-        function loadProducts() {
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/products`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load products');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    displayProducts(data.data);
-                } else {
-                    showMessage(data.message || 'Failed to load products', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to load products', 'error');
-            });
-        }
-
-        // Add product function
-        document.getElementById('addProductForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const token = localStorage.getItem('token');
-            const product = {
-                name: document.getElementById('productName').value,
-                description: document.getElementById('productDescription').value,
-                price: parseFloat(document.getElementById('productPrice').value),
-                stock: parseInt(document.getElementById('productStock').value)
-            };
-
-            fetch(`${API_URL}/products`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(product)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to add product');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('Product added successfully');
-                    loadProducts();
-                    this.reset();
-                } else {
-                    showMessage(data.message || 'Failed to add product', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to add product', 'error');
-            });
-        });
-
-        // Update product function
-        function updateProduct(productId, product) {
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/products/${productId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(product)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to update product');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('Product updated successfully');
-                    loadProducts();
-                } else {
-                    showMessage(data.message || 'Failed to update product', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to update product', 'error');
-            });
-        }
-
-        // Delete product function
-        function deleteProduct(productId) {
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/products/${productId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to delete product');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('Product deleted successfully');
-                    loadProducts();
-                } else {
-                    showMessage(data.message || 'Failed to delete product', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to delete product', 'error');
-            });
-        }
-
-        // Database management functions
-        function createRoleTables() {
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/users/create-role-tables`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to create role tables');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('Role tables created successfully');
-                } else {
-                    showMessage(data.message || 'Failed to create role tables', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to create role tables', 'error');
-            });
-        }
-
-        function createUserTables() {
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/users/create-user-tables`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to create user tables');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('User tables created successfully');
-                } else {
-                    showMessage(data.message || 'Failed to create user tables', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to create user tables', 'error');
-            });
-        }
-
-        function createProductTables() {
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/products/create-tables`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to create product tables');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('Product tables created successfully');
-                } else {
-                    showMessage(data.message || 'Failed to create product tables', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to create product tables', 'error');
-            });
-        }
-
-        // Database management functions
-        function createTables() {
-            if (!confirm('Are you sure you want to create all database tables?')) {
-                return;
-            }
-            
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/users/create-tables`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to create tables');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('Tables created successfully');
-                } else {
-                    showMessage(data.message || 'Failed to create tables', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to create tables', 'error');
-            });
-        }
-
-        function dropTables() {
-            if (!confirm('WARNING: This will delete all data in the database. Are you absolutely sure?')) {
-                return;
-            }
-            
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/users/drop-tables`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to drop tables');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showMessage('Tables dropped successfully');
-                } else {
-                    showMessage(data.message || 'Failed to drop tables', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to drop tables', 'error');
-            });
-        }
-
-        // Display products function
-        function displayProducts(products) {
-            const productsList = document.getElementById('productsList');
-            
-            if (!Array.isArray(products) || products.length === 0) {
-                productsList.innerHTML = '<div class="alert alert-info">No products found</div>';
-                return;
-            }
-
-            productsList.innerHTML = products.map(product => `
-                <div class="card product-card">
-                    <div class="card-body">
-                        <h5 class="card-title">${product.name}</h5>
-                        <p class="card-text">${product.description || 'No description'}</p>
-                        <p class="card-text">Price: $${product.price.toFixed(2)}</p>
-                        <p class="card-text">Stock: ${product.stock}</p>
-                        ${userPermissions.includes('update_product') ? `
-                            <button class="btn btn-warning btn-sm me-2" onclick="editProduct(${product.id})">Edit</button>
-                        ` : ''}
-                        ${userPermissions.includes('delete_product') ? `
-                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Delete</button>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Edit product function
-        function editProduct(productId) {
-            const token = localStorage.getItem('token');
-            fetch(`${API_URL}/products/${productId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to get product details');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const product = data.data;
-                    // Populate form with product data
-                    document.getElementById('productName').value = product.name;
-                    document.getElementById('productDescription').value = product.description || '';
-                    document.getElementById('productPrice').value = product.price;
-                    document.getElementById('productStock').value = product.stock;
-                    
-                    // Change form submit handler temporarily
-                    const form = document.getElementById('addProductForm');
-                    const originalSubmitHandler = form.onsubmit;
-                    
-                    form.onsubmit = function(e) {
-                        e.preventDefault();
-                        const updatedProduct = {
-                            name: document.getElementById('productName').value,
-                            description: document.getElementById('productDescription').value,
-                            price: parseFloat(document.getElementById('productPrice').value),
-                            stock: parseInt(document.getElementById('productStock').value)
-                        };
-
-                        updateProduct(productId, updatedProduct);
-                        
-                        // Restore original submit handler
-                        form.onsubmit = originalSubmitHandler;
-                        form.reset();
-                    };
-                } else {
-                    showMessage(data.message || 'Failed to get product details', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage(error.message || 'Failed to get product details', 'error');
-            });
-        }
-
-        // Check authentication on page load
-        document.addEventListener('DOMContentLoaded', checkAuth);
     </script>
 </body>
 </html> 

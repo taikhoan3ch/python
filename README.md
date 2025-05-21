@@ -1,40 +1,47 @@
-# User Info API
+# FastAPI Backend with Modular Monolith Architecture
 
-A production-ready FastAPI application following Modular Monolith architecture.
+A robust FastAPI backend application with JWT authentication, role-based authorization, and dynamic table creation capabilities.
+
+## Features
+
+- JWT Authentication with role-based authorization
+- PostgreSQL database with dynamic table creation
+- RESTful API with OpenAPI documentation
+- Modular monolith architecture
+- Alembic database migrations
+- Temporary HTML UI for API testing
+- Railway deployment ready
+
+## Tech Stack
+
+- Python 3.12
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL
+- JWT (PyJWT)
+- bcrypt
+- HTML + Fetch API
+- Bootstrap
 
 ## Project Structure
 
 ```
-app/
-├── modules/
-│   ├── common/
-│   │   ├── config/
-│   │   │   ├── settings.py
-│   │   │   └── database.py
-│   │   └── utils/
-│   │       └── security.py
-│   └── users/
-│       ├── models/
-│       │   └── user.py
-│       ├── schemas/
-│       │   └── user.py
-│       ├── services/
-│       │   └── user_service.py
-│       └── api/
-│           └── endpoints.py
+project/
+├── app/
+│   ├── core/               # Configs, JWT auth, DB connection
+│   ├── modules/            # Modular components
+│   ├── api/                # OpenAPI route groups
+│   ├── services/           # Shared business logic
+│   ├── static/             # HTML UI
+│   ├── main.py             # App entrypoint
+├── alembic/                # Database migrations
+├── tests/                  # Unit tests
+├── requirements.txt
+├── .env
 ```
 
-## Features
-
-- Modular Monolith Architecture
-- Clean Code Structure
-- CORS Middleware
-- Environment Configuration
-- Type Hints and Validation
-- OpenAPI Documentation
-- SQLite Database (Ready for production database)
-
-## Local Development
+## Setup
 
 1. Create a virtual environment:
 ```bash
@@ -47,37 +54,50 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Run the application:
-```bash
-uvicorn main:app --reload
+3. Set up environment variables in `.env`:
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
 ```
 
-The API will be available at http://localhost:8000
+4. Run database migrations:
+```bash
+alembic upgrade head
+```
+
+5. Start the development server:
+```bash
+uvicorn app.main:app --reload
+```
 
 ## API Documentation
 
-Once the application is running, you can access:
-- Swagger UI documentation: http://localhost:8000/docs
-- ReDoc documentation: http://localhost:8000/redoc
+Once the server is running, visit:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-## API Endpoints
+## Temporary UI
 
-### Users
-- GET `/api/v1/users/`: Get all users
-- GET `/api/v1/users/{user_id}`: Get user by ID
-- POST `/api/v1/users/`: Create new user
+Access the temporary HTML UI at:
+- Login: http://localhost:8000/static/index.html
+- Setup: http://localhost:8000/static/setup.html
+- Users: http://localhost:8000/static/users.html
+- Companies: http://localhost:8000/static/companies.html
+- Products: http://localhost:8000/static/products.html
+- Items: http://localhost:8000/static/items.html
 
-## Deployment to Railway
+## Deployment
 
-1. Create a new project on Railway
-2. Connect your GitHub repository
-3. Railway will automatically detect the Python application and deploy it
-4. The application will be available at the URL provided by Railway
+The application is configured for deployment on Railway:
 
-## Environment Variables
+1. Connect your GitHub repository to Railway
+2. Add the following environment variables:
+   - DATABASE_URL
+   - SECRET_KEY
+   - ALGORITHM
+3. Deploy the application
 
-Create a `.env` file in the root directory with the following variables:
-```
-DATABASE_URL=sqlite:///./sql_app.db
-BACKEND_CORS_ORIGINS=["http://localhost:3000"]
-``` 
+## License
+
+MIT 
