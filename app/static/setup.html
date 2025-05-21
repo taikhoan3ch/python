@@ -66,12 +66,6 @@
     </div>
 
     <script>
-        // Check if user is logged in
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/static/index.html';
-        }
-
         document.getElementById('createAdminForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -82,8 +76,7 @@
                 const response = await fetch('/api/v1/users/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         username: username,
