@@ -104,7 +104,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     logger.error(f"Validation error: {exc.errors()}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"success": False, "message": "Validation error", "data": exc.errors()}
+        content={
+            "success": False,
+            "message": "Invalid request data",
+            "errors": [{"loc": err["loc"], "msg": err["msg"]} for err in exc.errors()]
+        }
     )
 
 @app.exception_handler(Exception)
@@ -112,5 +116,8 @@ async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unexpected error: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"success": False, "message": f"Unexpected error: {str(exc)}"}
+        content={
+            "success": False,
+            "message": "An unexpected error occurred. Please try again later."
+        }
     ) 

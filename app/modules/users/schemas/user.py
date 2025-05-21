@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -20,6 +20,13 @@ class User(UserBase):
     id: int
     is_active: bool
     role_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+class UserResponse(BaseModel):
+    success: bool = True
+    data: User
 
     class Config:
         from_attributes = True 
