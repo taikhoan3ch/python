@@ -13,6 +13,7 @@ class TokenPayload(BaseModel):
 # User schemas
 class UserBase(BaseModel):
     username: str
+    email: str
     role: str
     permission: str
 
