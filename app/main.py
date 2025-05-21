@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.core.config import settings
 
 app = FastAPI(
@@ -27,4 +28,10 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to FastAPI Backend"} 
+    return FileResponse("app/static/index.html")
+
+@app.get("/{path:path}")
+async def serve_static(path: str):
+    if path.endswith(".html"):
+        return FileResponse(f"app/static/{path}")
+    return {"message": "Not Found"}, 404 
