@@ -9,7 +9,6 @@ from app.modules.common.config.database import get_db
 from app.modules.users.schemas.user import User, UserCreate, UserUpdate, UserResponse
 from app.modules.users.services import user_service
 from app.modules.users.services.role_service import RoleService
-from app.modules.common.utils.response import StandardResponse
 from app.modules.common.middleware.auth_middleware import check_permissions
 from app.modules.common.utils.jwt import create_access_token
 from app.modules.common.utils.security import verify_password

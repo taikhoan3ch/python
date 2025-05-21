@@ -5,7 +5,6 @@ from app.modules.common.config.database import get_db
 from app.modules.common.middleware.auth_middleware import check_permissions
 from app.modules.products.schemas.product import Product, ProductCreate, ProductUpdate
 from app.modules.products.services.product_service import ProductService
-from app.modules.common.utils.response import StandardResponse
 from fastapi.responses import JSONResponse
 import logging
 from app.modules.users.api.endpoints import get_current_user

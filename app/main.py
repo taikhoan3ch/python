@@ -7,7 +7,6 @@ from typing import Optional, Any, Dict
 import logging
 from app.modules.common.config.settings import settings
 from app.modules.users.api.endpoints import router as users_router
-from app.modules.common.utils.response import StandardResponse
 import os
 from app.modules.common.config.database import engine, Base
 from app.modules.products.api.endpoints import router as products_router
